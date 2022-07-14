@@ -152,6 +152,12 @@ label, .selected {
   cursor: pointer;
 }
 
+
+.option.active {
+  background: #81878f;
+  font-weight: 600;
+}
+
 .countries-select .option:hover {
   background: #dcdfe5;
 }

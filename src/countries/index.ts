@@ -23,7 +23,7 @@ const dropdownStyle = `
 `;
 
 const validatePhone = (value: string) => {
-  return value.match(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im);
+  return value.match(/^[0-9]*$/);
 };
 export const fetchCountries = (defaultCountryCode: string) => {
   document.head.insertAdjacentHTML('beforeend', dropdownStyle);
@@ -44,17 +44,18 @@ export const fetchCountries = (defaultCountryCode: string) => {
   //form onsubmit
   countriesContainerForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const phoneNumber = countriesContainerForm.querySelector('.phone-number') as HTMLInputElement;
-    const country = selectedByDefault.querySelector('span') as HTMLInputElement;
 
-    const countryCode = country.textContent;
+    const phoneNumber = document.getElementById('phone-number') as HTMLInputElement;
+    const country = selectedByDefault.getAttribute('data-id');
+
+    const countryCode = country?.split('-')[1];
     const phoneNumberValue = phoneNumber.value;
 
     if (!validatePhone(phoneNumberValue)) {
       alert('Invalid phone number!');
       return false;
     }
-    const phoneNumberWithCode = `${countryCode}${phoneNumberValue}`;
+    const phoneNumberWithCode = `+${countryCode}${phoneNumberValue}`;
 
     //change button text
     const button = countriesContainerForm.querySelector('button') as HTMLButtonElement;
@@ -95,17 +96,20 @@ export const fetchCountries = (defaultCountryCode: string) => {
           (country) => country.idd.root && country.name.common && country.flags.png && country.cca2
         )
         .map((country) => {
+          const cleanCountryCode = `${country.idd.root.replace('+', '')}${country.idd.suffixes[0]}`;
+          const defaultElementId = `${country.cca2}-${cleanCountryCode}`;
           const option = document.createElement('div') as HTMLDivElement;
+          option.setAttribute('id', defaultElementId);
           //create input radio
           const input = document.createElement('input') as HTMLInputElement;
           input.type = 'radio';
-          input.id = `${country.idd.root}${country.idd.suffixes[0]}`;
+          // input.id = `country-${cleanCountryCode}`;
           input.name = 'country';
-          input.value = `${country.idd.root}${country.idd.suffixes[0]}`;
+          input.value = `${defaultElementId}`;
           input.classList.add('radio');
           //create label
           const label = document.createElement('label') as HTMLLabelElement;
-          label.htmlFor = `${country.idd.root}${country.idd.suffixes[0]}`;
+          label.htmlFor = `${cleanCountryCode}`;
           // create image
           const img = document.createElement('img') as HTMLImageElement;
           img.src = country.flags.png;
@@ -127,10 +131,9 @@ export const fetchCountries = (defaultCountryCode: string) => {
             const imagedefault = document.createElement('img') as HTMLImageElement;
             selectedByDefault.appendChild(imagedefault);
             const span = document.createElement('span') as HTMLSpanElement;
+            span.setAttribute('data-id', defaultElementId);
             imagedefault.src = country.flags.png;
-            span.appendChild(
-              document.createTextNode(`${country.idd.root}${country.idd.suffixes[0]}`)
-            );
+            span.appendChild(document.createTextNode(`+${cleanCountryCode}`));
             selectedByDefault.appendChild(span);
           }
         });
@@ -142,6 +145,18 @@ export const fetchCountries = (defaultCountryCode: string) => {
 
       selected.addEventListener('click', () => {
         optionsContainer.classList.toggle('active');
+
+        // get current selected option
+        const selectedOptionCode = selected.querySelector('span') as HTMLSpanElement;
+
+        const selectedOptionCodeValue =
+          selected.getAttribute('data-id') || selectedOptionCode?.getAttribute('data-id');
+        const toScrollTo = `${selectedOptionCodeValue?.replace('+', '')}`;
+
+        // scroll to element that matches id
+        const elementToScrollTo = document.getElementById(toScrollTo) as HTMLElement;
+        elementToScrollTo.classList.toggle('active');
+        elementToScrollTo?.scrollIntoView({ block: 'start', behavior: 'smooth' });
       });
 
       optionsList?.forEach((option) => {
@@ -154,11 +169,27 @@ export const fetchCountries = (defaultCountryCode: string) => {
             const imgLogo = option.querySelector('img') as HTMLImageElement;
             //get value
             const { value } = input;
+            const span = document.createElement('span') as HTMLSpanElement;
+            span.setAttribute('data-id', value);
+            span.appendChild(document.createTextNode(`+${value.split('-')[1]}`));
 
             // append image and value to selected
-            selected.innerHTML = imgLogo.outerHTML + value;
+            selected.innerHTML = imgLogo.outerHTML + span.outerHTML;
+            selected.setAttribute('data-id', value);
             optionsContainer.classList.remove('active');
           }
+        });
+        document.addEventListener('keypress', (e) => {
+          const keyPressed = e.key;
+
+          const getAllIds = document.querySelectorAll('div[class~="option"]');
+          const getAllIdsArray = Array.from(getAllIds).find((item) =>
+            item.id.startsWith(keyPressed.toLocaleUpperCase())
+          )!;
+          const toScrollTo = getAllIdsArray.id;
+          // scroll to element that matches id
+          const elementToScrollTo = document.getElementById(toScrollTo) as HTMLElement;
+          elementToScrollTo?.scrollIntoView({ block: 'start', behavior: 'smooth' });
         });
       });
     });
