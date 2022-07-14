@@ -97,6 +97,9 @@ export const fetchCountries = () => {
       const countries: Countries[] = data;
       countries
         .sort((a, b) => a.name.common.localeCompare(b.name.common))
+        .filter(
+          (country) => country.idd.root && country.name.common && country.flags.png && country.cca2
+        )
         .map((country) => {
           const option = document.createElement('div') as HTMLDivElement;
           //create input radio
