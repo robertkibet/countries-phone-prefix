@@ -159,6 +159,44 @@ export const fetchCountries = (defaultCountryCode: string) => {
         elementToScrollTo?.scrollIntoView({ block: 'start', behavior: 'smooth' });
       });
 
+      // use arrow keys to scroll option
+
+      const listContainer = document.querySelector('.country-section') as HTMLElement;
+      const listItems = document.querySelectorAll('.option') as NodeListOf<HTMLElement>;
+      const listArray = Array.prototype.slice.call(listItems);
+
+      // get item that is to be focused first.
+      const selectedOptionCode = selected.querySelector('span') as HTMLSpanElement;
+
+      const selectedOptionCodeValue =
+        selected.getAttribute('data-id') || selectedOptionCode?.getAttribute('data-id');
+      const toScrollTo = `${selectedOptionCodeValue?.replace('+', '')}`;
+
+      document.getElementById(toScrollTo)?.focus();
+
+      let i = 0; // iterate over children elements inside dropdown
+      const childs = listContainer.children; // get all dropdown elements
+      // attach keyboard events
+      window.addEventListener('keydown', (event) => {
+        console.log(event.key);
+        switch (event.key) {
+          case 'ArrowDown':
+            for (const c of childs) c.classList.remove('active');
+            childs[Math.abs(i) % childs.length].classList.add('active');
+            i++;
+            break;
+          case 'ArrowUp':
+            for (const c of childs) c.classList.remove('active');
+            childs[Math.abs(i) % childs.length].classList.add('active');
+            i--;
+            break;
+        }
+
+        if (event.isComposing || event.key === 'Enter') {
+          return;
+        }
+      });
+
       optionsList?.forEach((option) => {
         option.addEventListener('click', () => {
           const targetedInput = option.querySelector('label')?.innerHTML || '';
@@ -231,4 +269,15 @@ export const fetchCountries = (defaultCountryCode: string) => {
   countriesSection.appendChild(countriesContainerForm);
   // update the DOM with the new elements
   document.body.appendChild(countriesSection);
+
+  //   e.preventDefault();
+  //   switch (e.key) {
+  //     case 'ArrowDown':
+  //       setNext(listArray.indexOf(<HTMLElement>( <HTMLElement>e.target ).parentNode));
+  //       break;
+  //     case 'ArrowUp':
+  //       setPrev(listArray.indexOf(<HTMLElement>( <HTMLElement>e.target ).parentNode));
+  //       break;
+  //   }
+  // });
 };
