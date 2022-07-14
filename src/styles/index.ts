@@ -79,6 +79,7 @@ img {
   width: 100%;
   flex-direction: column;
   position: relative;
+  height: 50px;
 }
 
 .countries-select .country-section {
@@ -98,6 +99,7 @@ img {
   position: relative;
   background-color: #ffffff;
   order: 0;
+  height: 100%;
 }
 
 label, .selected {

@@ -25,7 +25,7 @@ const dropdownStyle = `
 const validatePhone = (value: string) => {
   return value.match(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im);
 };
-export const fetchCountries = () => {
+export const fetchCountries = (defaultCountryCode: string) => {
   document.head.insertAdjacentHTML('beforeend', dropdownStyle);
 
   const countriesSection = document.createElement('div') as HTMLDivElement;
@@ -40,12 +40,6 @@ export const fetchCountries = () => {
   //create default option
   const selectedByDefault = document.createElement('div') as HTMLDivElement;
   selectedByDefault.classList.add('selected');
-  const imagedefault = document.createElement('img') as HTMLImageElement;
-  imagedefault.src = 'https://flagcdn.com/ke.svg';
-  selectedByDefault.appendChild(imagedefault);
-  const span = document.createElement('span') as HTMLSpanElement;
-  span.appendChild(document.createTextNode('+254'));
-  selectedByDefault.appendChild(span);
 
   //form onsubmit
   countriesContainerForm.addEventListener('submit', (e) => {
@@ -126,6 +120,19 @@ export const fetchCountries = () => {
           option.appendChild(label);
           option.classList.add('option');
           countriesDiv.appendChild(option);
+
+          //check if default matches input locale from ipinfo and set default else use pre-set static
+
+          if (defaultCountryCode === country.cca2) {
+            const imagedefault = document.createElement('img') as HTMLImageElement;
+            selectedByDefault.appendChild(imagedefault);
+            const span = document.createElement('span') as HTMLSpanElement;
+            imagedefault.src = country.flags.png;
+            span.appendChild(
+              document.createTextNode(`${country.idd.root}${country.idd.suffixes[0]}`)
+            );
+            selectedByDefault.appendChild(span);
+          }
         });
 
       // handle select change
