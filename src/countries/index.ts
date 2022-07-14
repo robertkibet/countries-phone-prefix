@@ -105,13 +105,13 @@ export const fetchCountries = () => {
           //create input radio
           const input = document.createElement('input') as HTMLInputElement;
           input.type = 'radio';
-          input.id = country.idd.root;
+          input.id = `${country.idd.root}${country.idd.suffixes[0]}`;
           input.name = 'country';
-          input.value = country.idd.root;
+          input.value = `${country.idd.root}${country.idd.suffixes[0]}`;
           input.classList.add('radio');
           //create label
           const label = document.createElement('label') as HTMLLabelElement;
-          label.htmlFor = country.idd.root;
+          label.htmlFor = `${country.idd.root}${country.idd.suffixes[0]}`;
           // create image
           const img = document.createElement('img') as HTMLImageElement;
           img.src = country.flags.png;
