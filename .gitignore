@@ -26,3 +26,9 @@ typings/
 
 # Production files
 dist
+
+# Vscode Rest client
+.rest-client
+
+# ignore chrome overrides folder
+webflow-overrides
