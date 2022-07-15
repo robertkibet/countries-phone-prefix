@@ -92,7 +92,6 @@ export const fetchCountries = (defaultCountryCode: string) => {
 
   const countriesDiv = document.createElement('div') as HTMLDivElement;
   countriesDiv.classList.add('country-section');
-  // countriesDiv.setAttribute('id', 'country-section');
 
   fetch('https://restcountries.com/v3.1/all?fields=name,cca2,idd,flags')
     .then((res) => res.json())
