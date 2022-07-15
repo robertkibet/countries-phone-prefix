@@ -41,21 +41,27 @@ export const fetchCountries = (defaultCountryCode: string) => {
   const selectedByDefault = document.createElement('div') as HTMLDivElement;
   selectedByDefault.classList.add('selected');
 
+  // create hidden input field
+  const hiddenInput = document.createElement('input') as HTMLInputElement;
+  hiddenInput.setAttribute('type', 'hidden');
+  hiddenInput.setAttribute('name', 'countryCode');
+  hiddenInput.setAttribute('id', 'countryCode');
+
   //form onsubmit
   countriesContainerForm.addEventListener('submit', (e) => {
     e.preventDefault();
 
     const phoneNumber = document.getElementById('phone-number') as HTMLInputElement;
-    const country = selectedByDefault.getAttribute('data-id');
+    const countryCode = document.getElementById('countryCode') as HTMLInputElement;
 
-    const countryCode = country?.split('-')[1];
     const phoneNumberValue = phoneNumber.value;
+    const countryCodeValue = countryCode.value;
 
     if (!validatePhone(phoneNumberValue)) {
       alert('Invalid phone number!');
       return false;
     }
-    const phoneNumberWithCode = `+${countryCode}${phoneNumberValue}`;
+    const phoneNumberWithCode = `${countryCodeValue}${phoneNumberValue}`;
 
     //change button text
     const button = countriesContainerForm.querySelector('button') as HTMLButtonElement;
@@ -77,6 +83,7 @@ export const fetchCountries = (defaultCountryCode: string) => {
 
       countriesContainerForm.style.display = 'none';
       countriesSection.appendChild(dummy);
+      (e.target as HTMLFormElement).reset();
     }, 3000);
   });
 
@@ -85,13 +92,14 @@ export const fetchCountries = (defaultCountryCode: string) => {
 
   const countriesDiv = document.createElement('div') as HTMLDivElement;
   countriesDiv.classList.add('country-section');
+  // countriesDiv.setAttribute('id', 'country-section');
 
   fetch('https://restcountries.com/v3.1/all?fields=name,cca2,idd,flags')
     .then((res) => res.json())
     .then((data) => {
       const countries: Countries[] = data;
       countries
-        .sort((a, b) => a.name.common.localeCompare(b.name.common))
+        .sort((a, b) => a.cca2.localeCompare(b.cca2))
         .filter(
           (country) => country.idd.root && country.name.common && country.flags.png && country.cca2
         )
@@ -100,6 +108,8 @@ export const fetchCountries = (defaultCountryCode: string) => {
           const defaultElementId = `${country.cca2}-${cleanCountryCode}`;
           const option = document.createElement('div') as HTMLDivElement;
           option.setAttribute('id', defaultElementId);
+          option.setAttribute('tabindex', '1');
+
           //create input radio
           const input = document.createElement('input') as HTMLInputElement;
           input.type = 'radio';
@@ -135,6 +145,10 @@ export const fetchCountries = (defaultCountryCode: string) => {
             imagedefault.src = country.flags.png;
             span.appendChild(document.createTextNode(`+${cleanCountryCode}`));
             selectedByDefault.appendChild(span);
+
+            (
+              document.querySelector('input[name="countryCode"]') as HTMLInputElement
+            ).value = `+${cleanCountryCode}`;
           }
         });
 
@@ -145,7 +159,6 @@ export const fetchCountries = (defaultCountryCode: string) => {
 
       selected.addEventListener('click', () => {
         optionsContainer.classList.toggle('active');
-
         // get current selected option
         const selectedOptionCode = selected.querySelector('span') as HTMLSpanElement;
 
@@ -155,7 +168,7 @@ export const fetchCountries = (defaultCountryCode: string) => {
 
         // scroll to element that matches id
         const elementToScrollTo = document.getElementById(toScrollTo) as HTMLElement;
-        elementToScrollTo.classList.toggle('active');
+        elementToScrollTo.classList.add('active');
         elementToScrollTo?.scrollIntoView({ block: 'start', behavior: 'smooth' });
       });
 
@@ -172,27 +185,80 @@ export const fetchCountries = (defaultCountryCode: string) => {
         selected.getAttribute('data-id') || selectedOptionCode?.getAttribute('data-id');
       const toScrollTo = `${selectedOptionCodeValue?.replace('+', '')}`;
 
+      // get index of item matching id that is actively selected for toScrollTo
+      const indexToStartFrom = listArray.findIndex((item) => item.id === toScrollTo);
+
       document.getElementById(toScrollTo)?.focus();
 
-      let i = 0; // iterate over children elements inside dropdown
+      let i = indexToStartFrom; // iterate over children elements inside dropdown
       const childs = listContainer.children; // get all dropdown elements
       // attach keyboard events
       window.addEventListener('keydown', (event) => {
-        console.log(event.key);
-        switch (event.key) {
-          case 'ArrowDown':
-            for (const c of childs) c.classList.remove('active');
-            childs[Math.abs(i) % childs.length].classList.add('active');
-            i++;
-            break;
-          case 'ArrowUp':
-            for (const c of childs) c.classList.remove('active');
-            childs[Math.abs(i) % childs.length].classList.add('active');
-            i--;
-            break;
+        if (event.key === 'ArrowDown') {
+          i++;
+          for (const c of childs) c.classList.remove('active');
+          childs[Math.abs(i) % childs.length].classList.add('active');
+          //focus to div
+          document.getElementById(childs[Math.abs(i) % childs.length].id)?.focus();
+          return;
         }
 
-        if (event.isComposing || event.key === 'Enter') {
+        if (event.key === 'ArrowUp') {
+          i--;
+          for (const c of childs) c.classList.remove('active');
+          childs[Math.abs(i) % childs.length].classList.add('active');
+          document.getElementById(childs[Math.abs(i) % childs.length].id)?.focus();
+          return;
+        }
+        if (event.key === 'Tab') {
+          //close dropdown
+          // cleanup remove active classess for selected item and close dropdown
+          for (const c of childs) c.classList.remove('active');
+          optionsContainer.classList.remove('active');
+          return;
+        }
+
+        // check if key is alpabets, scroll to element that matches
+        if (event.key === 'Enter') {
+          //get focused element
+          const elementToSelect = document.activeElement as HTMLElement;
+
+          // set selected on enter key
+          const input = elementToSelect.querySelector('.radio') as HTMLInputElement;
+          const imgLogo = elementToSelect.querySelector('img') as HTMLImageElement;
+          const { value } = input;
+          const span = document.createElement('span') as HTMLSpanElement;
+          span.setAttribute('data-id', value);
+          span.appendChild(document.createTextNode(`+${value.split('-')[1]}`));
+
+          (document.querySelector('input[name="countryCode"]') as HTMLInputElement).value = `+${
+            value.split('-')[1]
+          }`;
+
+          selected.innerHTML = imgLogo.outerHTML + span.outerHTML;
+          selected.setAttribute('data-id', value);
+          optionsContainer.classList.remove('active');
+          return;
+        }
+        if (/[A-Za-z]/.test(event.key)) {
+          // get first letter of key pressed
+          const keyPressed = event.key;
+
+          const getAllIds = document.querySelectorAll('div[class~="option"]');
+          const getAllIdsArray = Array.from(getAllIds).find((item) =>
+            item.id.startsWith(keyPressed.toLocaleUpperCase())
+          )!;
+          const toScrollTo = getAllIdsArray.id;
+          // scroll to element that matches id
+          const elementToScrollTo = document.getElementById(toScrollTo) as HTMLElement;
+          for (const c of childs) c.classList.remove('active');
+          elementToScrollTo.classList.add('active');
+          elementToScrollTo?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+          elementToScrollTo?.focus();
+          return;
+        }
+
+        if (event.isComposing) {
           return;
         }
       });
@@ -214,20 +280,16 @@ export const fetchCountries = (defaultCountryCode: string) => {
             // append image and value to selected
             selected.innerHTML = imgLogo.outerHTML + span.outerHTML;
             selected.setAttribute('data-id', value);
+            (document.querySelector('input[name="countryCode"]') as HTMLInputElement).value = `+${
+              value.split('-')[1]
+            }`;
+
+            // cleanup remove active classess for selected item and close dropdown
+            const listContainer = document.querySelector('.country-section') as HTMLElement;
+            const childs = listContainer.children;
+            for (const c of childs) c.classList.remove('active');
             optionsContainer.classList.remove('active');
           }
-        });
-        document.addEventListener('keypress', (e) => {
-          const keyPressed = e.key;
-
-          const getAllIds = document.querySelectorAll('div[class~="option"]');
-          const getAllIdsArray = Array.from(getAllIds).find((item) =>
-            item.id.startsWith(keyPressed.toLocaleUpperCase())
-          )!;
-          const toScrollTo = getAllIdsArray.id;
-          // scroll to element that matches id
-          const elementToScrollTo = document.getElementById(toScrollTo) as HTMLElement;
-          elementToScrollTo?.scrollIntoView({ block: 'start', behavior: 'smooth' });
         });
       });
     });
@@ -264,20 +326,10 @@ export const fetchCountries = (defaultCountryCode: string) => {
 
   countriesContainerForm.appendChild(countriesSelect);
   countriesContainerForm.appendChild(input);
+  countriesContainerForm.appendChild(hiddenInput);
   countriesContainerForm.appendChild(button);
 
   countriesSection.appendChild(countriesContainerForm);
   // update the DOM with the new elements
   document.body.appendChild(countriesSection);
-
-  //   e.preventDefault();
-  //   switch (e.key) {
-  //     case 'ArrowDown':
-  //       setNext(listArray.indexOf(<HTMLElement>( <HTMLElement>e.target ).parentNode));
-  //       break;
-  //     case 'ArrowUp':
-  //       setPrev(listArray.indexOf(<HTMLElement>( <HTMLElement>e.target ).parentNode));
-  //       break;
-  //   }
-  // });
 };

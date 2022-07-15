@@ -16,7 +16,10 @@ window.Webflow.push(() => {
     .then((data: GeoFindMeProps) => {
       const countryCode = data.country || 'US';
       fetchCountries(countryCode);
+    })
+    .catch((err) => {
+      // just in case :P
+      console.log(err);
+      fetchCountries('US');
     });
-
-  console.log('herer', document.querySelectorAll('.select-box'));
 });
