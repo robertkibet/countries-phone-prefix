@@ -121,7 +121,9 @@ export const fetchCountries = (defaultCountryCode: string) => {
           label.htmlFor = `${cleanCountryCode}`;
           // create image
           const img = document.createElement('img') as HTMLImageElement;
-          img.src = country.flags.png;
+          //add alt
+          img.setAttribute('alt', `${country.name.common}`);
+          img.setAttribute('src', `${country.flags.png}`);
           // create span
           const span = document.createElement('span') as HTMLSpanElement;
           span.appendChild(document.createTextNode(country.cca2));
@@ -138,10 +140,11 @@ export const fetchCountries = (defaultCountryCode: string) => {
 
           if (defaultCountryCode === country.cca2) {
             const imagedefault = document.createElement('img') as HTMLImageElement;
+            imagedefault.setAttribute('src', `${country.flags.png}`);
+            imagedefault.setAttribute('alt', `${country.name.common}`);
             selectedByDefault.appendChild(imagedefault);
             const span = document.createElement('span') as HTMLSpanElement;
             span.setAttribute('data-id', defaultElementId);
-            imagedefault.src = country.flags.png;
             span.appendChild(document.createTextNode(`+${cleanCountryCode}`));
             selectedByDefault.appendChild(span);
 
