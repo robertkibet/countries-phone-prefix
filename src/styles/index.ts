@@ -157,6 +157,9 @@ label, .selected {
   background: #81878f;
   font-weight: 600;
 }
+.option:focus {
+  outline: none;
+}
 
 .countries-select .option:hover {
   background: #dcdfe5;
