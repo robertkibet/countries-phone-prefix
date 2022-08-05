@@ -26,3 +26,6 @@ typings/
 
 # Production files
 dist
+
+# ignore chrome overrides folder
+webflow-overrides
